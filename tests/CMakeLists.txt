@@ -13,10 +13,12 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(trading_oms_rms_tests
     smoke_test.cpp
+    types_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests
     PRIVATE
+        oms_domain
         GTest::gtest_main
 )
 
