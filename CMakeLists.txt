@@ -18,9 +18,8 @@ target_compile_options(trading_oms_rms_demo PRIVATE
 )
 
 enable_testing()
-add_test(NAME smoke COMMAND trading_oms_rms_demo)
+add_subdirectory(tests)
 
 # Skeleton directories for future stories
-# tests/  - unit/integration tests
 # bench/  - benchmarks
 # docs/adr/ - architecture decision records
