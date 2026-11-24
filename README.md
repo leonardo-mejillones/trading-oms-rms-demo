@@ -135,6 +135,11 @@ This project is a learning/demo codebase that evolves incrementally through user
 - Uses an injectable clock so rate-limit behavior is deterministic in tests.
 - Designed as a composable `RiskCheck` that rejects orders with `rate limit exceeded` when exhausted.
 
+### S4.5 - Account halt / kill switch
+- `Oms` supports halting/resuming accounts (`halt_account`, `resume_account`, `is_account_halted`).
+- New orders and replaces for a halted account are rejected with `account halted`.
+- Cancels remain allowed so risk/operators can reduce exposure while an account is halted.
+
 ## Project Structure
 
 ```text
@@ -179,6 +184,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── order_state_test.cpp
 │   ├── position_test.cpp
 │   ├── rate_limit_test.cpp
+│   ├── account_halt_test.cpp
 │   ├── replace_test.cpp
 │   ├── risk_limits_test.cpp
 │   ├── risk_test.cpp
@@ -236,7 +242,8 @@ Current test suites cover:
 - composable pre-trade risk checks with short-circuit rejection,
 - max order size and max notional fat-finger limits,
 - position tracking and per-account/symbol position limits (long/short),
-- per-account token-bucket order rate limiting with deterministic clock injection.
+- per-account token-bucket order rate limiting with deterministic clock injection,
+- account halt/kill switch (new orders/replaces rejected, cancels allowed).
 
 ## Continuous Integration
 

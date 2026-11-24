@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -30,6 +31,10 @@ public:
         position_tracker_ = std::move(tracker);
     }
 
+    void halt_account(AccountId account) { halted_accounts_.insert(account); }
+    void resume_account(AccountId account) { halted_accounts_.erase(account); }
+    [[nodiscard]] bool is_account_halted(AccountId account) const { return halted_accounts_.contains(account); }
+
     [[nodiscard]] OrderBook& book() noexcept { return book_; }
     [[nodiscard]] const OrderBook& book() const noexcept { return book_; }
 
@@ -53,6 +58,7 @@ private:
     std::unordered_map<ClientOrderKey, std::vector<Event>, ClientOrderKeyHash> idempotency_store_;
     std::shared_ptr<RiskCheckPipeline> risk_pipeline_;
     std::shared_ptr<PositionTracker> position_tracker_;
+    std::unordered_set<AccountId> halted_accounts_;
 };
 
 } // namespace oms

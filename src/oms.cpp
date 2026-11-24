@@ -47,6 +47,15 @@ void Oms::submit(const Order& order, EventSink& sink) {
         }
     }
 
+    if (halted_accounts_.contains(order.account())) {
+        const Event rejection = OrderRejected{order.id(), "account halted"};
+        sink.publish(rejection);
+        if (has_client_id) {
+            idempotency_store_.emplace(key, std::vector<Event>{rejection});
+        }
+        return;
+    }
+
     if (position_tracker_ != nullptr) {
         position_tracker_->register_order(order);
     }
@@ -111,6 +120,12 @@ void Oms::cancel(OrderId order_id, EventSink& sink) {
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 void Oms::replace(OrderId order_id, Price new_price, Quantity new_quantity, EventSink& sink) {
+    if (const auto account = book_.account_of(order_id);
+        account.has_value() && halted_accounts_.contains(*account)) {
+        sink.publish(OrderRejected{order_id, "account halted"});
+        return;
+    }
+
     if (position_tracker_ == nullptr) {
         book_.replace(order_id, new_price, new_quantity, sink);
         return;

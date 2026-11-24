@@ -287,4 +287,12 @@ Quantity OrderBook::depth_at(Side side, Price price) const {
     return total;
 }
 
+std::optional<AccountId> OrderBook::account_of(OrderId id) const {
+    const auto it = order_index_.find(id);
+    if (it == order_index_.end()) {
+        return std::nullopt;
+    }
+    return it->second.it->account();
+}
+
 } // namespace oms

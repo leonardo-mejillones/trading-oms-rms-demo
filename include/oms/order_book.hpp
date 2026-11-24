@@ -65,6 +65,9 @@ public:
     /// Returns the total resting quantity at a side/price level.
     [[nodiscard]] Quantity depth_at(Side side, Price price) const;
 
+    /// Returns the account that owns a resting order, or nullopt if unknown.
+    [[nodiscard]] std::optional<AccountId> account_of(OrderId id) const;
+
 private:
     using PriceLevel = std::list<Order>;
     using BidLevels = std::map<Price, PriceLevel, std::greater<Price>>;
