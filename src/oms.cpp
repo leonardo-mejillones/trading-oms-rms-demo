@@ -23,8 +23,10 @@ private:
 } // namespace
 
 void Oms::submit(const Order& order, EventSink& sink) {
-    if (order.client_order_id().value != 0) {
-        const ClientOrderKey key{order.account(), order.client_order_id()};
+    const bool has_client_id = order.client_order_id().value != 0;
+    ClientOrderKey key{};
+    if (has_client_id) {
+        key = ClientOrderKey{order.account(), order.client_order_id()};
         if (const auto it = idempotency_store_.find(key); it != idempotency_store_.end()) {
             // Duplicate ClientOrderId for same account: replay original result.
             for (const auto& event : it->second) {
@@ -32,7 +34,22 @@ void Oms::submit(const Order& order, EventSink& sink) {
             }
             return;
         }
+    }
 
+    // Pre-trade risk checks run before the order reaches the book.
+    if (risk_pipeline_ != nullptr) {
+        const RiskResult risk = risk_pipeline_->evaluate(order);
+        if (!risk.ok) {
+            const Event rejection = OrderRejected{order.id(), risk.reason};
+            sink.publish(rejection);
+            if (has_client_id) {
+                idempotency_store_.emplace(key, std::vector<Event>{rejection});
+            }
+            return;
+        }
+    }
+
+    if (has_client_id) {
         CaptureSink capture(sink);
         book_.submit(order, capture);
         idempotency_store_.emplace(key, capture.events());

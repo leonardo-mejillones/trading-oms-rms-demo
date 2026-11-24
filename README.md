@@ -114,6 +114,11 @@ This project is a learning/demo codebase that evolves incrementally through user
 - `replay` applies entries in original order to a fresh `OrderBook`, reproducing identical state/events (determinism test).
 - ADR: [ADR-003 - Event Journal and Replay](docs/adr/0003-event-journal-and-replay.md).
 
+### S4.1 - Risk check pipeline
+- Composable pre-trade `RiskCheck` interface and `RiskCheckPipeline`.
+- Each check returns pass or reject(reason); pipeline short-circuits on first rejection.
+- `Oms` runs risk pipeline before submitting to the book; rejected orders emit `OrderRejected` and do not reach matching.
+
 ## Project Structure
 
 ```text
@@ -134,6 +139,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │       ├── order.hpp                 # Order model with validation
 │       ├── order_book.hpp            # Order book API
 │       ├── order_state.hpp           # Order lifecycle state machine
+│       ├── risk.hpp                  # Composable pre-trade risk checks
 │       ├── types.hpp                 # Strong domain primitives/enums
 │       └── validation.hpp            # Order validation and reject reasons
 ├── src/
@@ -155,6 +161,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── order_book_test.cpp
 │   ├── order_state_test.cpp
 │   ├── replace_test.cpp
+│   ├── risk_test.cpp
 │   ├── smoke_test.cpp
 │   ├── types_test.cpp
 │   └── validation_test.cpp
@@ -205,7 +212,8 @@ Current test suites cover:
 - order lifecycle state machine transitions (allowed and illegal),
 - idempotent submission and duplicate cancel behavior,
 - order validation with distinct reject reasons,
-- append-only journal replay determinism.
+- append-only journal replay determinism,
+- composable pre-trade risk checks with short-circuit rejection.
 
 ## Continuous Integration
 

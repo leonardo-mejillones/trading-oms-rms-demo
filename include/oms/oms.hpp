@@ -8,6 +8,7 @@
 
 #include "oms/event_sink.hpp"
 #include "oms/order_book.hpp"
+#include "oms/risk.hpp"
 
 namespace oms {
 
@@ -19,6 +20,10 @@ public:
     void submit(const Order& order, EventSink& sink);
     void cancel(OrderId order_id, EventSink& sink);
     void replace(OrderId order_id, Price new_price, Quantity new_quantity, EventSink& sink);
+
+    void set_risk_pipeline(std::shared_ptr<RiskCheckPipeline> pipeline) {
+        risk_pipeline_ = std::move(pipeline);
+    }
 
     [[nodiscard]] OrderBook& book() noexcept { return book_; }
     [[nodiscard]] const OrderBook& book() const noexcept { return book_; }
@@ -41,6 +46,7 @@ private:
 
     OrderBook book_;
     std::unordered_map<ClientOrderKey, std::vector<Event>, ClientOrderKeyHash> idempotency_store_;
+    std::shared_ptr<RiskCheckPipeline> risk_pipeline_;
 };
 
 } // namespace oms
