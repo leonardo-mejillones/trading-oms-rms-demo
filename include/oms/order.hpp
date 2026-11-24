@@ -15,10 +15,12 @@ public:
           Price price,
           Quantity quantity,
           OrderType type = OrderType::Limit,
-          TimeInForce tif = TimeInForce::GTC);
+          TimeInForce tif = TimeInForce::GTC,
+          ClientOrderId client_order_id = ClientOrderId{0});
 
     [[nodiscard]] OrderId id() const noexcept { return id_; }
     [[nodiscard]] AccountId account() const noexcept { return account_; }
+    [[nodiscard]] ClientOrderId client_order_id() const noexcept { return client_order_id_; }
     [[nodiscard]] Side side() const noexcept { return side_; }
     [[nodiscard]] Price price() const noexcept { return price_; }
     [[nodiscard]] Quantity quantity() const noexcept { return quantity_; }
@@ -32,6 +34,7 @@ public:
 private:
     OrderId id_;
     AccountId account_;
+    ClientOrderId client_order_id_;
     Side side_;
     Price price_;
     Quantity quantity_;

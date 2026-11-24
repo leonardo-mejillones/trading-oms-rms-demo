@@ -14,6 +14,7 @@ add_library(oms_domain
     src/order.cpp
     src/order_book.cpp
     src/order_state.cpp
+    src/oms.cpp
 )
 target_include_directories(oms_domain PUBLIC include)
 target_compile_options(oms_domain PRIVATE

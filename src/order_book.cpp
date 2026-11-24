@@ -14,7 +14,7 @@ Quantity min_qty(Quantity a, Quantity b) {
 // Used when a resting or incoming order is partially filled.
 Order with_quantity(const Order& order, Quantity quantity) {
     return Order(order.id(), order.account(), order.side(), order.price(), quantity, order.type(),
-                 order.time_in_force());
+                 order.time_in_force(), order.client_order_id());
 }
 
 } // namespace
@@ -134,6 +134,11 @@ void OrderBook::cancel(OrderId order_id, EventSink& sink) {
     // Direct index lookup avoids scanning all price levels/orders.
     const auto index_it = order_index_.find(order_id);
     if (index_it == order_index_.end()) {
+        if (canceled_order_ids_.contains(order_id)) {
+            // Duplicate cancel: idempotent success.
+            sink.publish(OrderCanceled{order_id});
+            return;
+        }
         sink.publish(CancelRejected{order_id, "unknown or already filled order"});
         return;
     }
@@ -158,6 +163,7 @@ void OrderBook::cancel(OrderId order_id, EventSink& sink) {
     }
 
     unindex_order(order_id);
+    canceled_order_ids_.insert(order_id);
     sink.publish(OrderCanceled{order_id});
 }
 
@@ -193,7 +199,7 @@ void OrderBook::replace(OrderId order_id, Price new_price, Quantity new_quantity
     std::optional<Order> replacement;
     try {
         replacement.emplace(current.id(), current.account(), current.side(), new_price, new_quantity,
-                            current.type(), current.time_in_force());
+                            current.type(), current.time_in_force(), current.client_order_id());
     } catch (const std::invalid_argument&) {
         sink.publish(CancelRejected{order_id, "invalid replacement order"});
         return;

@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "oms/order.hpp"
 
@@ -82,6 +83,7 @@ private:
     BidLevels bids_;
     AskLevels asks_;
     std::unordered_map<OrderId, OrderLocation> order_index_;
+    std::unordered_set<OrderId> canceled_order_ids_;
 };
 
 } // namespace oms

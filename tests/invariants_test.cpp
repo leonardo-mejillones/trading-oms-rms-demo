@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <optional>
 #include <random>
+#include <unordered_set>
 #include <vector>
 
 #include "oms/order_book.hpp"
@@ -52,10 +53,15 @@ public:
     void cancel(OrderId order_id, EventSink& sink) {
         auto it = find_by_id(order_id);
         if (it == resting_.end()) {
+            if (canceled_ids_.contains(order_id.value)) {
+                sink.publish(OrderCanceled{order_id}); // Duplicate cancel: idempotent.
+                return;
+            }
             sink.publish(CancelRejected{order_id, "unknown or already filled order"});
             return;
         }
         resting_.erase(it);
+        canceled_ids_.insert(order_id.value);
         sink.publish(OrderCanceled{order_id});
     }
 
@@ -129,6 +135,7 @@ public:
 private:
     std::vector<NaiveRestingOrder> resting_;
     uint64_t next_seq_{1};
+    std::unordered_set<uint64_t> canceled_ids_;
 
     std::vector<NaiveRestingOrder>::iterator find_by_id(OrderId id) {
         return std::find_if(resting_.begin(), resting_.end(),

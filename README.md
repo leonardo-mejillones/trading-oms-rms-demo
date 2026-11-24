@@ -98,6 +98,12 @@ This project is a learning/demo codebase that evolves incrementally through user
 - Illegal transitions return an error result; allowed transitions return next state.
 - Unit tests cover every allowed and illegal transition.
 
+### S3.2 - Idempotency
+- `ClientOrderId` added to domain model; `Oms` facade provides idempotent submit.
+- Duplicate `(AccountId, ClientOrderId)` submissions replay the original result without reprocessing.
+- Duplicate cancels are idempotent: canceling an already-canceled order returns `OrderCanceled` again instead of rejection.
+- Canceling an already filled (not canceled) order remains rejected.
+
 ## Project Structure
 
 ```text
@@ -113,18 +119,21 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   └── oms/
 │       ├── event_sink.hpp            # EventSink interface + in-memory sink
 │       ├── events.hpp                # Domain events and Event variant
+│       ├── oms.hpp                   # OMS facade with idempotent submission
 │       ├── order.hpp                 # Order model with validation
 │       ├── order_book.hpp            # Order book API
 │       ├── order_state.hpp           # Order lifecycle state machine
 │       └── types.hpp                 # Strong domain primitives/enums
 ├── src/
 │   ├── main.cpp                      # Demo executable entry point
+│   ├── oms.cpp                       # OMS idempotency facade
 │   ├── order.cpp                     # Order validation/formatting
 │   ├── order_book.cpp                # Add/match/cancel/replace/depth logic
 │   └── order_state.cpp               # Order lifecycle transition table
 ├── tests/
 │   ├── cancel_test.cpp
 │   ├── events_test.cpp
+│   ├── idempotency_test.cpp
 │   ├── invariants_test.cpp
 │   ├── market_order_test.cpp
 │   ├── matching_test.cpp
@@ -177,7 +186,8 @@ Current test suites cover:
 - cancel/replace behavior (priority loss/keep rules),
 - cancellation behavior (success, unknown/filled, FIFO preservation),
 - seeded randomized invariants against a naive reference implementation,
-- order lifecycle state machine transitions (allowed and illegal).
+- order lifecycle state machine transitions (allowed and illegal),
+- idempotent submission and duplicate cancel behavior.
 
 ## Continuous Integration
 

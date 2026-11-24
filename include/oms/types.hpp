@@ -138,6 +138,19 @@ struct AccountId {
     }
 };
 
+struct ClientOrderId {
+    uint64_t value{0};
+
+    constexpr ClientOrderId() noexcept = default;
+    constexpr explicit ClientOrderId(uint64_t v) noexcept : value(v) {}
+
+    constexpr auto operator<=>(const ClientOrderId&) const noexcept = default;
+
+    friend std::ostream& operator<<(std::ostream& os, ClientOrderId id) {
+        return os << "ClientOrderId(" << id.value << ")";
+    }
+};
+
 enum class Side : uint8_t {
     Buy,
     Sell
@@ -202,6 +215,13 @@ struct hash<oms::OrderId> {
 template <>
 struct hash<oms::AccountId> {
     std::size_t operator()(oms::AccountId id) const noexcept {
+        return std::hash<uint64_t>{}(id.value);
+    }
+};
+
+template <>
+struct hash<oms::ClientOrderId> {
+    std::size_t operator()(oms::ClientOrderId id) const noexcept {
         return std::hash<uint64_t>{}(id.value);
     }
 };
