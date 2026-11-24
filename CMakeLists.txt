@@ -12,6 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(oms_domain
     src/order.cpp
+    src/order_book.cpp
 )
 target_include_directories(oms_domain PUBLIC include)
 target_compile_options(oms_domain PRIVATE
