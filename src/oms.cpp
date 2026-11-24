@@ -36,12 +36,19 @@ void Oms::submit(const Order& order, EventSink& sink) {
         }
     }
 
+    if (position_tracker_ != nullptr) {
+        position_tracker_->register_order(order);
+    }
+
     // Pre-trade risk checks run before the order reaches the book.
     if (risk_pipeline_ != nullptr) {
         const RiskResult risk = risk_pipeline_->evaluate(order);
         if (!risk.ok) {
             const Event rejection = OrderRejected{order.id(), risk.reason};
             sink.publish(rejection);
+            if (position_tracker_ != nullptr) {
+                position_tracker_->apply(rejection);
+            }
             if (has_client_id) {
                 idempotency_store_.emplace(key, std::vector<Event>{rejection});
             }
@@ -49,10 +56,17 @@ void Oms::submit(const Order& order, EventSink& sink) {
         }
     }
 
-    if (has_client_id) {
+    if (has_client_id || position_tracker_ != nullptr) {
         CaptureSink capture(sink);
         book_.submit(order, capture);
-        idempotency_store_.emplace(key, capture.events());
+        if (position_tracker_ != nullptr) {
+            for (const auto& event : capture.events()) {
+                position_tracker_->apply(event);
+            }
+        }
+        if (has_client_id) {
+            idempotency_store_.emplace(key, capture.events());
+        }
         return;
     }
 
@@ -60,11 +74,48 @@ void Oms::submit(const Order& order, EventSink& sink) {
 }
 
 void Oms::cancel(OrderId order_id, EventSink& sink) {
+    if (position_tracker_ != nullptr) {
+        CaptureSink capture(sink);
+        book_.cancel(order_id, capture);
+        for (const auto& event : capture.events()) {
+            position_tracker_->apply(event);
+        }
+        return;
+    }
     book_.cancel(order_id, sink);
 }
 
 void Oms::replace(OrderId order_id, Price new_price, Quantity new_quantity, EventSink& sink) {
-    book_.replace(order_id, new_price, new_quantity, sink);
+    if (position_tracker_ == nullptr) {
+        book_.replace(order_id, new_price, new_quantity, sink);
+        return;
+    }
+
+    const auto old_info = position_tracker_->open_order(order_id);
+    CaptureSink capture(sink);
+    book_.replace(order_id, new_price, new_quantity, capture);
+
+    bool saw_accepted = false;
+    for (const auto& event : capture.events()) {
+        if (const auto* accepted = std::get_if<OrderAccepted>(&event)) {
+            if (accepted->order_id == order_id && old_info.has_value()) {
+                // Losing-priority replace re-submitted the order: re-register with updated qty/price.
+                position_tracker_->close_open_order(order_id);
+                position_tracker_->register_order(Order(order_id, old_info->account, old_info->side, new_price,
+                                                       new_quantity, OrderType::Limit, TimeInForce::GTC,
+                                                       ClientOrderId{0}, old_info->symbol));
+                saw_accepted = true;
+            }
+        }
+        position_tracker_->apply(event);
+    }
+
+    // In-place decrease/no-op emits no events; sync tracker quantity if still open.
+    if (capture.events().empty() && old_info.has_value()) {
+        position_tracker_->update_open_quantity(order_id, new_quantity);
+    }
+
+    (void)saw_accepted;
 }
 
 } // namespace oms

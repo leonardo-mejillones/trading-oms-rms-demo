@@ -62,8 +62,8 @@ void OrderBook::submit(const Order& order, EventSink& sink) {
                 const Price fill_price = resting.price(); // Execute at resting price.
 
                 // Emit fills for both sides of the execution.
-                sink.publish(Fill{order.id(), fill_price, fill_qty});
-                sink.publish(Fill{resting.id(), fill_price, fill_qty});
+                sink.publish(Fill{order.id(), fill_price, fill_qty, order.account(), order.symbol(), order.side()});
+                sink.publish(Fill{resting.id(), fill_price, fill_qty, resting.account(), resting.symbol(), resting.side()});
 
                 remaining = remaining - fill_qty;
                 if (resting.quantity() == fill_qty) {
@@ -98,8 +98,8 @@ void OrderBook::submit(const Order& order, EventSink& sink) {
                 const Price fill_price = resting.price(); // Execute at resting price.
 
                 // Emit fills for both sides of the execution.
-                sink.publish(Fill{order.id(), fill_price, fill_qty});
-                sink.publish(Fill{resting.id(), fill_price, fill_qty});
+                sink.publish(Fill{order.id(), fill_price, fill_qty, order.account(), order.symbol(), order.side()});
+                sink.publish(Fill{resting.id(), fill_price, fill_qty, resting.account(), resting.symbol(), resting.side()});
 
                 remaining = remaining - fill_qty;
                 if (resting.quantity() == fill_qty) {

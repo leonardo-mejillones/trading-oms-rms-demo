@@ -124,6 +124,12 @@ This project is a learning/demo codebase that evolves incrementally through user
 - `MaxNotionalCheck`: rejects limit orders exceeding configured max notional (`price ticks * quantity`).
 - Designed as composable `RiskCheck` implementations to block fat-finger errors pre-trade.
 
+### S4.3 - Position tracking and limits
+- `PositionTracker` tracks net positions per account/symbol from fills and tracks open-order exposure.
+- `PositionLimitCheck` enforces max long/short limits considering worst-case exposure including open orders.
+- `Oms` integrates tracker updates (register/apply events) so positions and exposure stay consistent.
+- Tests cover long and short limits and fill-driven position updates.
+
 ## Project Structure
 
 ```text
@@ -144,6 +150,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │       ├── order.hpp                 # Order model with validation
 │       ├── order_book.hpp            # Order book API
 │       ├── order_state.hpp           # Order lifecycle state machine
+│       ├── position.hpp              # Position tracking and position limits
 │       ├── risk.hpp                  # Composable pre-trade risk checks
 │       ├── types.hpp                 # Strong domain primitives/enums
 │       └── validation.hpp            # Order validation and reject reasons
@@ -165,6 +172,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── matching_test.cpp
 │   ├── order_book_test.cpp
 │   ├── order_state_test.cpp
+│   ├── position_test.cpp
 │   ├── replace_test.cpp
 │   ├── risk_limits_test.cpp
 │   ├── risk_test.cpp
@@ -220,7 +228,8 @@ Current test suites cover:
 - order validation with distinct reject reasons,
 - append-only journal replay determinism,
 - composable pre-trade risk checks with short-circuit rejection,
-- max order size and max notional fat-finger limits.
+- max order size and max notional fat-finger limits,
+- position tracking and per-account/symbol position limits (long/short).
 
 ## Continuous Integration
 

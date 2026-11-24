@@ -24,12 +24,23 @@ struct OrderRejected {
 };
 
 // Represents an execution/fill for one side of a trade.
+// account/symbol/side are enriched metadata for risk/position tracking.
+// Equality compares core execution fields to keep existing tests stable.
 struct Fill {
     OrderId order_id{};
     Price price{};
     Quantity quantity{};
+    AccountId account{};
+    std::string symbol;
+    Side side{Side::Buy};
 
-    constexpr bool operator==(const Fill&) const noexcept = default;
+    Fill() = default;
+    Fill(OrderId oid, Price p, Quantity q, AccountId acc = {}, std::string sym = {}, Side s = Side::Buy)
+        : order_id(oid), price(p), quantity(q), account(acc), symbol(std::move(sym)), side(s) {}
+
+    bool operator==(const Fill& other) const noexcept {
+        return order_id == other.order_id && price == other.price && quantity == other.quantity;
+    }
 };
 
 // Emitted when an order is canceled (user cancel or IOC remainder).

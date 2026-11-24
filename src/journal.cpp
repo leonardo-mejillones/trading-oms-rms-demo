@@ -4,6 +4,11 @@
 
 namespace oms {
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 void EventJournal::append_submit(const Order& order) {
     entries_.push_back(SubmitEntry{order});
 }
@@ -15,6 +20,10 @@ void EventJournal::append_cancel(OrderId order_id) {
 void EventJournal::append_replace(OrderId order_id, Price new_price, Quantity new_quantity) {
     entries_.push_back(ReplaceEntry{order_id, new_price, new_quantity});
 }
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 void EventJournal::replay(OrderBook& book, EventSink& sink) const {
     for (const auto& entry : entries_) {
