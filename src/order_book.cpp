@@ -39,6 +39,10 @@ void OrderBook::add(const Order& order) {
     }
 }
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 void OrderBook::submit(const Order& order, EventSink& sink) {
     // The order is accepted for processing before matching/resting decisions.
     sink.publish(OrderAccepted{order.id()});
@@ -129,7 +133,14 @@ void OrderBook::submit(const Order& order, EventSink& sink) {
         }
     }
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 void OrderBook::cancel(OrderId order_id, EventSink& sink) {
     // Direct index lookup avoids scanning all price levels/orders.
     const auto index_it = order_index_.find(order_id);
@@ -166,7 +177,14 @@ void OrderBook::cancel(OrderId order_id, EventSink& sink) {
     canceled_order_ids_.insert(order_id);
     sink.publish(OrderCanceled{order_id});
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 void OrderBook::replace(OrderId order_id, Price new_price, Quantity new_quantity, EventSink& sink) {
     const auto index_it = order_index_.find(order_id);
     if (index_it == order_index_.end()) {
@@ -227,6 +245,9 @@ void OrderBook::replace(OrderId order_id, Price new_price, Quantity new_quantity
     // Re-submit so crossing replacements are matched immediately.
     submit(*replacement, sink);
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 std::optional<Price> OrderBook::best_bid() const {
     if (bids_.empty()) {

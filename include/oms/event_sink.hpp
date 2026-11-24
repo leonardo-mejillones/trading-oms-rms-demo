@@ -18,9 +18,16 @@ public:
 // Simple in-memory sink used by tests to inspect emitted events.
 class InMemoryEventSink : public EventSink {
 public:
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
     void publish(const Event& event) override {
         events_.push_back(event);
     }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
     [[nodiscard]] const std::vector<Event>& events() const noexcept {
         return events_;

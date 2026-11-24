@@ -8,10 +8,17 @@ class CaptureSink : public EventSink {
 public:
     explicit CaptureSink(EventSink& downstream) : downstream_(downstream) {}
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
     void publish(const Event& event) override {
         downstream_.publish(event);
         events_.push_back(event);
     }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
     [[nodiscard]] const std::vector<Event>& events() const noexcept { return events_; }
 
@@ -22,6 +29,10 @@ private:
 
 } // namespace
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 void Oms::submit(const Order& order, EventSink& sink) {
     const bool has_client_id = order.client_order_id().value != 0;
     ClientOrderKey key{};
@@ -72,7 +83,14 @@ void Oms::submit(const Order& order, EventSink& sink) {
 
     book_.submit(order, sink);
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 void Oms::cancel(OrderId order_id, EventSink& sink) {
     if (position_tracker_ != nullptr) {
         CaptureSink capture(sink);
@@ -84,7 +102,14 @@ void Oms::cancel(OrderId order_id, EventSink& sink) {
     }
     book_.cancel(order_id, sink);
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 void Oms::replace(OrderId order_id, Price new_price, Quantity new_quantity, EventSink& sink) {
     if (position_tracker_ == nullptr) {
         book_.replace(order_id, new_price, new_quantity, sink);
@@ -117,5 +142,8 @@ void Oms::replace(OrderId order_id, Price new_price, Quantity new_quantity, Even
 
     (void)saw_accepted;
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace oms
