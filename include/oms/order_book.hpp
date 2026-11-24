@@ -44,6 +44,15 @@ public:
     /// unknown or already filled, publishes CancelRejected with a reason.
     void cancel(OrderId order_id, EventSink& sink);
 
+    /// Replaces/modifies a resting order by OrderId (cancel/replace).
+    ///
+    /// Priority rules:
+    /// - Changing price or increasing quantity loses time priority (re-queued at back).
+    /// - Decreasing quantity at the same price keeps time priority.
+    ///
+    /// If the order is unknown/already filled, publishes CancelRejected with a reason.
+    void replace(OrderId order_id, Price new_price, Quantity new_quantity, EventSink& sink);
+
     /// Returns the highest bid price, or nullopt if there are no bids.
     [[nodiscard]] std::optional<Price> best_bid() const;
 

@@ -19,6 +19,7 @@ add_executable(trading_oms_rms_tests
     matching_test.cpp
     cancel_test.cpp
     market_order_test.cpp
+    replace_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests

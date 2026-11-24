@@ -79,6 +79,12 @@ This project is a learning/demo codebase that evolves incrementally through user
 - Market orders do not rest in the book; any unfilled remainder is canceled (`OrderCanceled`).
 - Tests cover empty book and partial liquidity scenarios.
 
+### S2.5 - Cancel/replace
+- `OrderBook::replace` modifies a resting order by `OrderId`.
+- **Price change or quantity increase:** loses time priority (re-queued at back of price level).
+- **Quantity decrease at same price:** keeps time priority (updated in place).
+- Unknown or already filled orders publish `CancelRejected`.
+
 ## Project Structure
 
 ```text
@@ -107,6 +113,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── market_order_test.cpp
 │   ├── matching_test.cpp
 │   ├── order_book_test.cpp
+│   ├── replace_test.cpp
 │   ├── smoke_test.cpp
 │   └── types_test.cpp
 ├── CMakeLists.txt
@@ -150,6 +157,7 @@ Current test suites cover:
 - order book structure/depth/best prices,
 - matching behavior (no match, exact, multi-level sweep, partial fill, GTC/IOC),
 - market order behavior (empty book, partial liquidity, best available prices),
+- cancel/replace behavior (priority loss/keep rules),
 - cancellation behavior (success, unknown/already filled, FIFO preservation).
 
 ## Continuous Integration

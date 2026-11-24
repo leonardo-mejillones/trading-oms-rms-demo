@@ -161,6 +161,66 @@ void OrderBook::cancel(OrderId order_id, EventSink& sink) {
     sink.publish(OrderCanceled{order_id});
 }
 
+void OrderBook::replace(OrderId order_id, Price new_price, Quantity new_quantity, EventSink& sink) {
+    const auto index_it = order_index_.find(order_id);
+    if (index_it == order_index_.end()) {
+        sink.publish(CancelRejected{order_id, "unknown or already filled order"});
+        return;
+    }
+
+    const OrderLocation location = index_it->second;
+    const Order& current = *location.it;
+
+    if (new_quantity.value == 0) {
+        sink.publish(CancelRejected{order_id, "replace quantity must be positive"});
+        return;
+    }
+
+    // Size decrease at the same price keeps time priority: update in place.
+    if (new_price == current.price() && new_quantity < current.quantity()) {
+        Order& resting = *location.it;
+        resting = with_quantity(resting, new_quantity);
+        return;
+    }
+
+    // No-op replace: keep current priority and state.
+    if (new_price == current.price() && new_quantity == current.quantity()) {
+        return;
+    }
+
+    // Price change or size increase loses time priority: remove old and re-queue at back.
+    // Validate/construct replacement before mutating the book.
+    std::optional<Order> replacement;
+    try {
+        replacement.emplace(current.id(), current.account(), current.side(), new_price, new_quantity,
+                            current.type(), current.time_in_force());
+    } catch (const std::invalid_argument&) {
+        sink.publish(CancelRejected{order_id, "invalid replacement order"});
+        return;
+    }
+
+    if (location.side == Side::Buy) {
+        auto level_it = bids_.find(location.price);
+        if (level_it != bids_.end()) {
+            level_it->second.erase(location.it);
+            if (level_it->second.empty()) {
+                bids_.erase(level_it);
+            }
+        }
+    } else {
+        auto level_it = asks_.find(location.price);
+        if (level_it != asks_.end()) {
+            level_it->second.erase(location.it);
+            if (level_it->second.empty()) {
+                asks_.erase(level_it);
+            }
+        }
+    }
+
+    unindex_order(order_id);
+    add(*replacement);
+}
+
 std::optional<Price> OrderBook::best_bid() const {
     if (bids_.empty()) {
         return std::nullopt;
