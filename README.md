@@ -85,6 +85,13 @@ This project is a learning/demo codebase that evolves incrementally through user
 - **Quantity decrease at same price:** keeps time priority (updated in place).
 - Unknown or already filled orders publish `CancelRejected`.
 
+### S2.6 - Invariants and randomized tests
+- Seeded randomized order flow tests compare `OrderBook` against a naive reference implementation.
+- Checks invariants/properties:
+  - book never crossed after matching,
+  - FIFO/behavior matches reference event sequence,
+  - quantity/depth state matches reference (conservation).
+
 ## Project Structure
 
 ```text
@@ -110,6 +117,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 ├── tests/
 │   ├── cancel_test.cpp
 │   ├── events_test.cpp
+│   ├── invariants_test.cpp
 │   ├── market_order_test.cpp
 │   ├── matching_test.cpp
 │   ├── order_book_test.cpp
@@ -158,7 +166,8 @@ Current test suites cover:
 - matching behavior (no match, exact, multi-level sweep, partial fill, GTC/IOC),
 - market order behavior (empty book, partial liquidity, best available prices),
 - cancel/replace behavior (priority loss/keep rules),
-- cancellation behavior (success, unknown/already filled, FIFO preservation).
+- cancellation behavior (success, unknown/filled, FIFO preservation),
+- seeded randomized invariants against a naive reference implementation.
 
 ## Continuous Integration
 

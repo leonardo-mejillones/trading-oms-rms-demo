@@ -218,7 +218,8 @@ void OrderBook::replace(OrderId order_id, Price new_price, Quantity new_quantity
     }
 
     unindex_order(order_id);
-    add(*replacement);
+    // Re-submit so crossing replacements are matched immediately.
+    submit(*replacement, sink);
 }
 
 std::optional<Price> OrderBook::best_bid() const {

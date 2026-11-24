@@ -50,6 +50,8 @@ public:
     /// - Changing price or increasing quantity loses time priority (re-queued at back).
     /// - Decreasing quantity at the same price keeps time priority.
     ///
+    /// If the replacement crosses the opposite side after losing priority, it is
+    /// re-submitted for matching to keep the book uncrossed.
     /// If the order is unknown/already filled, publishes CancelRejected with a reason.
     void replace(OrderId order_id, Price new_price, Quantity new_quantity, EventSink& sink);
 
