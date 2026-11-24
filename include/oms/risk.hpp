@@ -1,7 +1,12 @@
 #pragma once
 
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -88,6 +93,54 @@ public:
 
 private:
     int64_t max_notional_;
+};
+
+// Per-account token-bucket rate limit. Consumes one token per evaluated order.
+// Uses an injectable clock for deterministic testing.
+class RateLimitCheck : public RiskCheck {
+public:
+    using Clock = std::function<std::chrono::steady_clock::time_point()>;
+
+    RateLimitCheck(uint32_t capacity, double refill_per_second,
+                   Clock clock = []() { return std::chrono::steady_clock::now(); })
+        : capacity_(static_cast<double>(capacity)),
+          refill_per_second_(refill_per_second),
+          clock_(std::move(clock)) {}
+
+    [[nodiscard]] RiskResult check(const Order& order) const override {
+        const auto now = clock_();
+        Bucket& bucket = buckets_[order.account()];
+        if (!bucket.initialized) {
+            bucket.tokens = capacity_;
+            bucket.last = now;
+            bucket.initialized = true;
+        } else {
+            const std::chrono::duration<double> elapsed = now - bucket.last;
+            if (elapsed.count() > 0.0) {
+                bucket.tokens = std::min(capacity_, bucket.tokens + elapsed.count() * refill_per_second_);
+                bucket.last = now;
+            }
+        }
+
+        if (bucket.tokens < 1.0) {
+            return RiskResult::reject("rate limit exceeded");
+        }
+
+        bucket.tokens -= 1.0;
+        return RiskResult::pass();
+    }
+
+private:
+    struct Bucket {
+        double tokens{0.0};
+        std::chrono::steady_clock::time_point last{};
+        bool initialized{false};
+    };
+
+    double capacity_;
+    double refill_per_second_;
+    Clock clock_;
+    mutable std::unordered_map<AccountId, Bucket> buckets_;
 };
 
 } // namespace oms

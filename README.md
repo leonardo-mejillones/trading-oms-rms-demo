@@ -130,6 +130,11 @@ This project is a learning/demo codebase that evolves incrementally through user
 - `Oms` integrates tracker updates (register/apply events) so positions and exposure stay consistent.
 - Tests cover long and short limits and fill-driven position updates.
 
+### S4.4 - Order rate limit
+- `RateLimitCheck` enforces a per-account token-bucket rate limit to throttle runaway algorithms.
+- Uses an injectable clock so rate-limit behavior is deterministic in tests.
+- Designed as a composable `RiskCheck` that rejects orders with `rate limit exceeded` when exhausted.
+
 ## Project Structure
 
 ```text
@@ -173,6 +178,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── order_book_test.cpp
 │   ├── order_state_test.cpp
 │   ├── position_test.cpp
+│   ├── rate_limit_test.cpp
 │   ├── replace_test.cpp
 │   ├── risk_limits_test.cpp
 │   ├── risk_test.cpp
@@ -229,7 +235,8 @@ Current test suites cover:
 - append-only journal replay determinism,
 - composable pre-trade risk checks with short-circuit rejection,
 - max order size and max notional fat-finger limits,
-- position tracking and per-account/symbol position limits (long/short).
+- position tracking and per-account/symbol position limits (long/short),
+- per-account token-bucket order rate limiting with deterministic clock injection.
 
 ## Continuous Integration
 

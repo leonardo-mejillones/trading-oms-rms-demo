@@ -28,6 +28,7 @@ add_executable(trading_oms_rms_tests
     risk_test.cpp
     risk_limits_test.cpp
     position_test.cpp
+    rate_limit_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests
