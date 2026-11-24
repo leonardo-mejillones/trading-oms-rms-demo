@@ -109,6 +109,11 @@ This project is a learning/demo codebase that evolves incrementally through user
 - `validate_order` validates raw `OrderRequest` (and `Order`) against instrument specs (tick size, lot size, known symbol).
 - Early OMS validation checks positive quantity/price, tick/lot alignment, and known symbol.
 
+### S3.4 - Journal and replay
+- Append-only `EventJournal` records order-processing inputs (`Submit`, `Cancel`, `Replace`).
+- `replay` applies entries in original order to a fresh `OrderBook`, reproducing identical state/events (determinism test).
+- ADR: [ADR-003 - Event Journal and Replay](docs/adr/0003-event-journal-and-replay.md).
+
 ## Project Structure
 
 ```text
@@ -124,6 +129,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   └── oms/
 │       ├── event_sink.hpp            # EventSink interface + in-memory sink
 │       ├── events.hpp                # Domain events and Event variant
+│       ├── journal.hpp               # Append-only event journal and replay
 │       ├── oms.hpp                   # OMS facade with idempotent submission
 │       ├── order.hpp                 # Order model with validation
 │       ├── order_book.hpp            # Order book API
@@ -131,6 +137,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │       ├── types.hpp                 # Strong domain primitives/enums
 │       └── validation.hpp            # Order validation and reject reasons
 ├── src/
+│   ├── journal.cpp                   # Journal append/replay implementation
 │   ├── main.cpp                      # Demo executable entry point
 │   ├── oms.cpp                       # OMS idempotency facade
 │   ├── order.cpp                     # Order validation/formatting
@@ -142,6 +149,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── events_test.cpp
 │   ├── idempotency_test.cpp
 │   ├── invariants_test.cpp
+│   ├── journal_test.cpp
 │   ├── market_order_test.cpp
 │   ├── matching_test.cpp
 │   ├── order_book_test.cpp
@@ -196,7 +204,8 @@ Current test suites cover:
 - seeded randomized invariants against a naive reference implementation,
 - order lifecycle state machine transitions (allowed and illegal),
 - idempotent submission and duplicate cancel behavior,
-- order validation with distinct reject reasons.
+- order validation with distinct reject reasons,
+- append-only journal replay determinism.
 
 ## Continuous Integration
 
@@ -209,6 +218,7 @@ GitHub Actions CI (`.github/workflows/ci.yml`) runs on every push and pull reque
 
 - [ADR-001: Why Integer Prices](docs/adr/0001-why-integer-prices.md)
 - [ADR-002: Order Book Data Structure](docs/adr/0002-order-book-data-structure.md)
+- [ADR-003: Event Journal and Replay](docs/adr/0003-event-journal-and-replay.md)
 
 ## Development Notes
 

@@ -24,6 +24,7 @@ add_executable(trading_oms_rms_tests
     order_state_test.cpp
     idempotency_test.cpp
     validation_test.cpp
+    journal_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests
