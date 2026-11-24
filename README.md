@@ -119,6 +119,11 @@ This project is a learning/demo codebase that evolves incrementally through user
 - Each check returns pass or reject(reason); pipeline short-circuits on first rejection.
 - `Oms` runs risk pipeline before submitting to the book; rejected orders emit `OrderRejected` and do not reach matching.
 
+### S4.2 - Size and notional limits
+- `MaxOrderSizeCheck`: rejects orders exceeding configured max quantity.
+- `MaxNotionalCheck`: rejects limit orders exceeding configured max notional (`price ticks * quantity`).
+- Designed as composable `RiskCheck` implementations to block fat-finger errors pre-trade.
+
 ## Project Structure
 
 ```text
@@ -161,6 +166,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── order_book_test.cpp
 │   ├── order_state_test.cpp
 │   ├── replace_test.cpp
+│   ├── risk_limits_test.cpp
 │   ├── risk_test.cpp
 │   ├── smoke_test.cpp
 │   ├── types_test.cpp
@@ -213,7 +219,8 @@ Current test suites cover:
 - idempotent submission and duplicate cancel behavior,
 - order validation with distinct reject reasons,
 - append-only journal replay determinism,
-- composable pre-trade risk checks with short-circuit rejection.
+- composable pre-trade risk checks with short-circuit rejection,
+- max order size and max notional fat-finger limits.
 
 ## Continuous Integration
 

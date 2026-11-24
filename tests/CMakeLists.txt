@@ -26,6 +26,7 @@ add_executable(trading_oms_rms_tests
     validation_test.cpp
     journal_test.cpp
     risk_test.cpp
+    risk_limits_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests

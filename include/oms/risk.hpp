@@ -53,4 +53,41 @@ private:
     std::vector<std::shared_ptr<RiskCheck>> checks_;
 };
 
+// Rejects orders whose quantity exceeds the configured maximum.
+class MaxOrderSizeCheck : public RiskCheck {
+public:
+    explicit MaxOrderSizeCheck(Quantity max_size) : max_size_(max_size) {}
+
+    [[nodiscard]] RiskResult check(const Order& order) const override {
+        if (order.quantity() > max_size_) {
+            return RiskResult::reject("max order size exceeded");
+        }
+        return RiskResult::pass();
+    }
+
+private:
+    Quantity max_size_;
+};
+
+// Rejects orders whose notional (price ticks * quantity) exceeds the configured maximum.
+// Notional is evaluated for limit orders; market orders have no limit price reference.
+class MaxNotionalCheck : public RiskCheck {
+public:
+    explicit MaxNotionalCheck(int64_t max_notional) : max_notional_(max_notional) {}
+
+    [[nodiscard]] RiskResult check(const Order& order) const override {
+        if (order.type() == OrderType::Market) {
+            return RiskResult::pass();
+        }
+        const int64_t notional = order.price().ticks * static_cast<int64_t>(order.quantity().value);
+        if (notional > max_notional_) {
+            return RiskResult::reject("max order notional exceeded");
+        }
+        return RiskResult::pass();
+    }
+
+private:
+    int64_t max_notional_;
+};
+
 } // namespace oms
