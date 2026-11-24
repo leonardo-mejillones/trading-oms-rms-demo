@@ -9,9 +9,12 @@
 
 namespace oms {
 
+class EventSink;
+
 class OrderBook {
 public:
     void add(const Order& order);
+    void submit(const Order& order, EventSink& sink);
 
     [[nodiscard]] std::optional<Price> best_bid() const;
     [[nodiscard]] std::optional<Price> best_ask() const;
