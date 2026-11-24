@@ -156,12 +156,14 @@ inline std::ostream& operator<<(std::ostream& os, Side side) {
 }
 
 enum class OrderType : uint8_t {
-    Limit
+    Limit,
+    Market
 };
 
 constexpr std::string_view to_string(OrderType type) noexcept {
     switch (type) {
-        case OrderType::Limit: return "Limit";
+        case OrderType::Limit:  return "Limit";
+        case OrderType::Market: return "Market";
     }
     return "Unknown";
 }

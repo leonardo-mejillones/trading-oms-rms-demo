@@ -23,17 +23,19 @@ public:
     /// The order is appended to the back of its side/price queue (FIFO).
     void add(const Order& order);
 
-    /// Submits an incoming limit order for matching.
+    /// Submits an incoming order (Limit or Market) for matching.
     ///
     /// Matching follows price-time priority:
-    /// - A buy matches asks from lowest price upward while ask price <= buy limit.
-    /// - A sell matches bids from highest price downward while bid price >= sell limit.
+    /// - A buy matches asks from lowest price upward.
+    /// - A sell matches bids from highest price downward.
+    /// - Limit orders only cross prices within their limit; market orders cross any
+    ///   available price on the opposite side.
     /// - Within the same price level, resting orders are matched FIFO.
     ///
     /// Trades execute at the resting order price. For each execution, Fill events
     /// are published for both the incoming and resting orders. If the incoming order
-    /// is not fully filled, GTC remainder rests in the book and IOC remainder is
-    /// canceled (OrderCanceled event).
+    /// is not fully filled, GTC limit remainder rests in the book; IOC and Market
+    /// remainders are canceled (OrderCanceled event).
     void submit(const Order& order, EventSink& sink);
 
     /// Cancels a resting order by OrderId.

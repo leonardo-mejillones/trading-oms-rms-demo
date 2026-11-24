@@ -73,6 +73,12 @@ This project is a learning/demo codebase that evolves incrementally through user
 - Cancels resting orders and publishes `OrderCanceled`.
 - Unknown or already filled orders publish `CancelRejected` with a reason.
 
+### S2.4 - Market orders
+- `OrderType::Market` supported in the domain model.
+- `OrderBook::submit` executes market orders immediately against best available prices on the opposite side.
+- Market orders do not rest in the book; any unfilled remainder is canceled (`OrderCanceled`).
+- Tests cover empty book and partial liquidity scenarios.
+
 ## Project Structure
 
 ```text
@@ -98,6 +104,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 ├── tests/
 │   ├── cancel_test.cpp
 │   ├── events_test.cpp
+│   ├── market_order_test.cpp
 │   ├── matching_test.cpp
 │   ├── order_book_test.cpp
 │   ├── smoke_test.cpp
@@ -142,6 +149,7 @@ Current test suites cover:
 - events and in-memory event sink,
 - order book structure/depth/best prices,
 - matching behavior (no match, exact, multi-level sweep, partial fill, GTC/IOC),
+- market order behavior (empty book, partial liquidity, best available prices),
 - cancellation behavior (success, unknown/already filled, FIFO preservation).
 
 ## Continuous Integration

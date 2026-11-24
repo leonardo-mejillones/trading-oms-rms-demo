@@ -47,9 +47,10 @@ void OrderBook::submit(const Order& order, EventSink& sink) {
 
     if (order.side() == Side::Buy) {
         // Buy orders cross the ask side, starting from the lowest ask price.
+        // Market orders have no price limit; limit orders stop when ask price is above limit.
         while (remaining.value > 0 && !asks_.empty()) {
             auto best_ask_it = asks_.begin();
-            if (best_ask_it->first > order.price()) {
+            if (order.type() == OrderType::Limit && best_ask_it->first > order.price()) {
                 // Best ask is above buy limit: no more crossing prices.
                 break;
             }
@@ -82,9 +83,10 @@ void OrderBook::submit(const Order& order, EventSink& sink) {
         }
     } else {
         // Sell orders cross the bid side, starting from the highest bid price.
+        // Market orders have no price limit; limit orders stop when bid price is below limit.
         while (remaining.value > 0 && !bids_.empty()) {
             auto best_bid_it = bids_.begin();
-            if (best_bid_it->first < order.price()) {
+            if (order.type() == OrderType::Limit && best_bid_it->first < order.price()) {
                 // Best bid is below sell limit: no more crossing prices.
                 break;
             }
@@ -118,8 +120,8 @@ void OrderBook::submit(const Order& order, EventSink& sink) {
     }
 
     if (remaining.value > 0) {
-        if (order.time_in_force() == TimeInForce::IOC) {
-            // IOC remainder cannot rest in the book.
+        if (order.type() == OrderType::Market || order.time_in_force() == TimeInForce::IOC) {
+            // Market and IOC orders never leave residual resting liquidity.
             sink.publish(OrderCanceled{order.id()});
         } else {
             // GTC remainder becomes resting liquidity at its limit price.
