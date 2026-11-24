@@ -18,6 +18,7 @@ Order::Order(OrderId id,
       quantity_(quantity),
       type_(type),
       tif_(tif) {
+    // Fail fast on invalid domain input to keep downstream components simple.
     if (id_.value == 0) {
         throw std::invalid_argument("Order id must be non-zero");
     }

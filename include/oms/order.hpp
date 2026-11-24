@@ -4,6 +4,9 @@
 
 namespace oms {
 
+// Immutable domain model for an order accepted by the OMS.
+// Construction validates basic invariants (non-zero IDs, positive quantity,
+// and positive price for limit orders).
 class Order {
 public:
     Order(OrderId id,

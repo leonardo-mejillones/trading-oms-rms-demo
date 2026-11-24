@@ -17,6 +17,7 @@ add_executable(trading_oms_rms_tests
     events_test.cpp
     order_book_test.cpp
     matching_test.cpp
+    cancel_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests

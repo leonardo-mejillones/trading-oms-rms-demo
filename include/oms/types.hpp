@@ -10,6 +10,8 @@
 
 namespace oms {
 
+// Integer tick price. Floating-point construction is intentionally disallowed
+// to avoid binary floating-point precision errors in trading calculations.
 struct Price {
     int64_t ticks{0};
 
@@ -61,6 +63,8 @@ struct Price {
     }
 };
 
+// Unsigned quantity in discrete units (e.g., shares/contracts).
+// Floating-point construction is intentionally disallowed.
 struct Quantity {
     uint64_t value{0};
 

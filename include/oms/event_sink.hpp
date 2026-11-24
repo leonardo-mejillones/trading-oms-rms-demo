@@ -7,6 +7,7 @@
 
 namespace oms {
 
+// Interface for consuming domain events emitted by OMS components.
 class EventSink {
 public:
     virtual ~EventSink() = default;
@@ -14,6 +15,7 @@ public:
     virtual void publish(const Event& event) = 0;
 };
 
+// Simple in-memory sink used by tests to inspect emitted events.
 class InMemoryEventSink : public EventSink {
 public:
     void publish(const Event& event) override {
@@ -36,6 +38,7 @@ public:
         events_.clear();
     }
 
+    // Returns all events of a specific type in publication order.
     template <typename T>
     [[nodiscard]] std::vector<T> events_of_type() const {
         std::vector<T> result;
