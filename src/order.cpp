@@ -11,10 +11,12 @@ Order::Order(OrderId id,
              Quantity quantity,
              OrderType type,
              TimeInForce tif,
-             ClientOrderId client_order_id)
+             ClientOrderId client_order_id,
+             std::string symbol)
     : id_(id),
       account_(account),
       client_order_id_(client_order_id),
+      symbol_(std::move(symbol)),
       side_(side),
       price_(price),
       quantity_(quantity),
@@ -39,6 +41,7 @@ std::ostream& operator<<(std::ostream& os, const Order& order) {
     return os << "Order{id=" << order.id_
               << ", account=" << order.account_
               << ", client_order_id=" << order.client_order_id_
+              << ", symbol=" << order.symbol_
               << ", side=" << order.side_
               << ", price=" << order.price_
               << ", qty=" << order.quantity_

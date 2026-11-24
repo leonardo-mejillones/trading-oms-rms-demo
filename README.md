@@ -104,6 +104,11 @@ This project is a learning/demo codebase that evolves incrementally through user
 - Duplicate cancels are idempotent: canceling an already-canceled order returns `OrderCanceled` again instead of rejection.
 - Canceling an already filled (not canceled) order remains rejected.
 
+### S3.3 - Validation
+- `RejectReason` enum with distinct reasons: `InvalidQuantity`, `InvalidPrice`, `InvalidTickSize`, `InvalidLotSize`, `UnknownSymbol`.
+- `validate_order` validates raw `OrderRequest` (and `Order`) against instrument specs (tick size, lot size, known symbol).
+- Early OMS validation checks positive quantity/price, tick/lot alignment, and known symbol.
+
 ## Project Structure
 
 ```text
@@ -123,13 +128,15 @@ This project is a learning/demo codebase that evolves incrementally through user
 │       ├── order.hpp                 # Order model with validation
 │       ├── order_book.hpp            # Order book API
 │       ├── order_state.hpp           # Order lifecycle state machine
-│       └── types.hpp                 # Strong domain primitives/enums
+│       ├── types.hpp                 # Strong domain primitives/enums
+│       └── validation.hpp            # Order validation and reject reasons
 ├── src/
 │   ├── main.cpp                      # Demo executable entry point
 │   ├── oms.cpp                       # OMS idempotency facade
 │   ├── order.cpp                     # Order validation/formatting
 │   ├── order_book.cpp                # Add/match/cancel/replace/depth logic
-│   └── order_state.cpp               # Order lifecycle transition table
+│   ├── order_state.cpp               # Order lifecycle transition table
+│   └── validation.cpp                # Order validation rules
 ├── tests/
 │   ├── cancel_test.cpp
 │   ├── events_test.cpp
@@ -141,7 +148,8 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── order_state_test.cpp
 │   ├── replace_test.cpp
 │   ├── smoke_test.cpp
-│   └── types_test.cpp
+│   ├── types_test.cpp
+│   └── validation_test.cpp
 ├── CMakeLists.txt
 └── README.md
 ```
@@ -187,7 +195,8 @@ Current test suites cover:
 - cancellation behavior (success, unknown/filled, FIFO preservation),
 - seeded randomized invariants against a naive reference implementation,
 - order lifecycle state machine transitions (allowed and illegal),
-- idempotent submission and duplicate cancel behavior.
+- idempotent submission and duplicate cancel behavior,
+- order validation with distinct reject reasons.
 
 ## Continuous Integration
 

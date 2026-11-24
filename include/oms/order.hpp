@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "oms/types.hpp"
 
 namespace oms {
@@ -16,11 +18,13 @@ public:
           Quantity quantity,
           OrderType type = OrderType::Limit,
           TimeInForce tif = TimeInForce::GTC,
-          ClientOrderId client_order_id = ClientOrderId{0});
+          ClientOrderId client_order_id = ClientOrderId{0},
+          std::string symbol = {});
 
     [[nodiscard]] OrderId id() const noexcept { return id_; }
     [[nodiscard]] AccountId account() const noexcept { return account_; }
     [[nodiscard]] ClientOrderId client_order_id() const noexcept { return client_order_id_; }
+    [[nodiscard]] const std::string& symbol() const noexcept { return symbol_; }
     [[nodiscard]] Side side() const noexcept { return side_; }
     [[nodiscard]] Price price() const noexcept { return price_; }
     [[nodiscard]] Quantity quantity() const noexcept { return quantity_; }
@@ -35,6 +39,7 @@ private:
     OrderId id_;
     AccountId account_;
     ClientOrderId client_order_id_;
+    std::string symbol_;
     Side side_;
     Price price_;
     Quantity quantity_;
