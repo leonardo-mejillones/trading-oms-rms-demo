@@ -92,6 +92,12 @@ This project is a learning/demo codebase that evolves incrementally through user
   - FIFO/behavior matches reference event sequence,
   - quantity/depth state matches reference (conservation).
 
+### S3.1 - Order state machine
+- Explicit order lifecycle states: `New`, `Accepted`, `PartiallyFilled`, `Filled`, `Canceled`, `Rejected`.
+- Explicit transition table and triggers (`Accept`, `Reject`, `PartialFill`, `Fill`, `Cancel`).
+- Illegal transitions return an error result; allowed transitions return next state.
+- Unit tests cover every allowed and illegal transition.
+
 ## Project Structure
 
 ```text
@@ -109,11 +115,13 @@ This project is a learning/demo codebase that evolves incrementally through user
 │       ├── events.hpp                # Domain events and Event variant
 │       ├── order.hpp                 # Order model with validation
 │       ├── order_book.hpp            # Order book API
+│       ├── order_state.hpp           # Order lifecycle state machine
 │       └── types.hpp                 # Strong domain primitives/enums
 ├── src/
 │   ├── main.cpp                      # Demo executable entry point
 │   ├── order.cpp                     # Order validation/formatting
-│   └── order_book.cpp                # Add/match/cancel/depth logic
+│   ├── order_book.cpp                # Add/match/cancel/replace/depth logic
+│   └── order_state.cpp               # Order lifecycle transition table
 ├── tests/
 │   ├── cancel_test.cpp
 │   ├── events_test.cpp
@@ -121,6 +129,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── market_order_test.cpp
 │   ├── matching_test.cpp
 │   ├── order_book_test.cpp
+│   ├── order_state_test.cpp
 │   ├── replace_test.cpp
 │   ├── smoke_test.cpp
 │   └── types_test.cpp
@@ -167,7 +176,8 @@ Current test suites cover:
 - market order behavior (empty book, partial liquidity, best available prices),
 - cancel/replace behavior (priority loss/keep rules),
 - cancellation behavior (success, unknown/filled, FIFO preservation),
-- seeded randomized invariants against a naive reference implementation.
+- seeded randomized invariants against a naive reference implementation,
+- order lifecycle state machine transitions (allowed and illegal).
 
 ## Continuous Integration
 

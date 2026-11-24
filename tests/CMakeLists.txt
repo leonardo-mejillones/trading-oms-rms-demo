@@ -21,6 +21,7 @@ add_executable(trading_oms_rms_tests
     market_order_test.cpp
     replace_test.cpp
     invariants_test.cpp
+    order_state_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests
