@@ -10,6 +10,7 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(googletest)
+find_package(Threads REQUIRED)
 
 add_executable(trading_oms_rms_tests
     smoke_test.cpp
@@ -31,12 +32,14 @@ add_executable(trading_oms_rms_tests
     rate_limit_test.cpp
     account_halt_test.cpp
     matching_engine_test.cpp
+    spsc_ring_buffer_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests
     PRIVATE
         oms_domain
         GTest::gtest_main
+        Threads::Threads
 )
 
 target_compile_options(trading_oms_rms_tests PRIVATE

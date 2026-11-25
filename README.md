@@ -145,6 +145,11 @@ This project is a learning/demo codebase that evolves incrementally through user
 - A single-threaded sequencer applies validation, risk, then matching; the same input sequence produces deterministic output.
 - ADR: [ADR-004 - Single-Writer Design](docs/adr/0004-single-writer-design.md).
 
+### S5.2 - SPSC ring buffer
+- `SpscRingBuffer<T>` provides a bounded lock-free single-producer/single-consumer queue for gateway-to-engine handoff.
+- `try_push`/`try_pop` are wait-free; memory ordering is documented in the header (acquire/release on head/tail indices).
+- Stress-tested with concurrent producer/consumer tests and a dedicated ThreadSanitizer CI job.
+
 ## Project Structure
 
 ```text
@@ -170,6 +175,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │       ├── order_state.hpp           # Order lifecycle state machine
 │       ├── position.hpp              # Position tracking and position limits
 │       ├── risk.hpp                  # Composable pre-trade risk checks
+│       ├── spsc_ring_buffer.hpp      # Bounded lock-free SPSC queue
 │       ├── types.hpp                 # Strong domain primitives/enums
 │       └── validation.hpp            # Order validation and reject reasons
 ├── src/
@@ -198,6 +204,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── replace_test.cpp
 │   ├── risk_limits_test.cpp
 │   ├── risk_test.cpp
+│   ├── spsc_ring_buffer_test.cpp
 │   ├── smoke_test.cpp
 │   ├── types_test.cpp
 │   └── validation_test.cpp
@@ -254,7 +261,8 @@ Current test suites cover:
 - position tracking and per-account/symbol position limits (long/short),
 - per-account token-bucket order rate limiting with deterministic clock injection,
 - account halt/kill switch (new orders/replaces rejected, cancels allowed),
-- matching engine facade sequencing commands with validation, risk, then matching deterministically.
+- matching engine facade sequencing commands with validation, risk, then matching deterministically,
+- bounded SPSC ring buffer with wait-free producer/consumer operations and concurrent stress tests.
 
 ## Continuous Integration
 
