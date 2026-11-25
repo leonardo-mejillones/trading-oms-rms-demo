@@ -40,7 +40,14 @@ std::vector<EngineCommand> OrderFlowGenerator::generate(const OrderFlowConfig& c
         if (do_cancel) {
             std::uniform_int_distribution<std::size_t> pick(0, known_ids.size() - 1);
             const OrderId id{known_ids[pick(rng)]};
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
             commands.push_back(CancelCommand{id});
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
             continue;
         }
 
@@ -63,7 +70,14 @@ std::vector<EngineCommand> OrderFlowGenerator::generate(const OrderFlowConfig& c
         req.type = OrderType::Limit;
         req.tif = TimeInForce::GTC;
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
         commands.push_back(SubmitCommand{req});
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
         known_ids.push_back(next_id);
         ++next_id;
     }
