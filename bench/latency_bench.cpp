@@ -72,6 +72,7 @@ int main() {
 
     oms::MatchingEngine engine({{"AAPL", oms::InstrumentSpec{"AAPL", 1, 1}}});
     oms::InMemoryEventSink sink;
+    sink.reserve(commands.size() * 4); // reduce reallocations in the measurement sink
 
     // Warm-up phase: process commands to warm caches/paths; do not record.
     for (std::size_t i = 0; i < kWarmup && i < commands.size(); ++i) {

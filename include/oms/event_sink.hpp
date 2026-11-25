@@ -45,6 +45,10 @@ public:
         events_.clear();
     }
 
+    void reserve(std::size_t n) {
+        events_.reserve(n);
+    }
+
     // Returns all events of a specific type in publication order.
     template <typename T>
     [[nodiscard]] std::vector<T> events_of_type() const {

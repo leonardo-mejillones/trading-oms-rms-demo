@@ -6,7 +6,9 @@ namespace {
 
 class CaptureSink : public EventSink {
 public:
-    explicit CaptureSink(EventSink& downstream) : downstream_(downstream) {}
+    explicit CaptureSink(EventSink& downstream) : downstream_(downstream) {
+        events_.reserve(4);
+    }
 
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push

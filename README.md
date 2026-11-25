@@ -182,6 +182,24 @@ cmake --build build-release --target latency_bench -j4
 | p99.9 | 8792.2 |
 | max | 3491291.0 |
 
+### S6.3 - Optimization pass
+- **Profile first:** baseline measured with `/usr/bin/time -l` on `./build-release/bench/latency_bench` (same seed/config/build as S6.2). The main avoidable churn was event-sink vector growth/reallocations in the benchmark sink and per-submit `CaptureSink`.
+- **Change:** added `InMemoryEventSink::reserve(size_t)`, reserved `commands.size() * 4` in `bench/latency_bench.cpp`, and reserved `4` events in OMS `CaptureSink` (`src/oms.cpp`). No behavior change.
+- **Before/after (same machine/compiler/build, one measured run each; latency percentiles are OS-noisy, memory/instructions are the clearest signal):**
+
+| Metric | Before | After |
+|---|---:|---:|
+| p50 ns | 125.0 | 208.0 |
+| p90 ns | 292.0 | 375.0 |
+| p99 ns | 1083.0 | 1875.0 |
+| p99.9 ns | 2042.0 | 3833.0 |
+| max ns | 1397625.0 | 253917.0 |
+| peak memory footprint bytes | 49709440 | 32293224 |
+| page reclaims | 3252 | 2193 |
+| instructions retired | 283105775 | 241497468 |
+
+Notes: the memory/instruction reduction is consistent with removing sink reallocations; latency tails/max vary significantly run-to-run on this desktop OS, so they should not be read as a precise improvement claim.
+
 ## Project Structure
 
 ```text
