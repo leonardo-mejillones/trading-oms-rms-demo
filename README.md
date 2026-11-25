@@ -154,13 +154,43 @@ This project is a learning/demo codebase that evolves incrementally through user
 - `OrderFlowGenerator` produces a reproducible, seeded synthetic workload as `EngineCommand`s.
 - Configurable mix includes passive new limit orders, aggressive crossing limit orders, and cancels.
 
+### S6.2 - Latency measurement
+- `bench/latency_bench.cpp` measures per-`MatchingEngine::process` command latency on a reproducible seeded workload.
+- Reports warm-up phase and percentile latencies: p50, p90, p99, p99.9, max.
+- Results below are honest measurements from this machine/build (not normalized or cherry-picked).
+
+**Environment**
+- Hardware: Apple M5 Pro (Mac17,9, arm64)
+- OS: Darwin 27.0.0 (macOS)
+- Compiler: Apple clang 21.0.0 (clang-2100.4.1.1), target arm64-apple-darwin27.0.0
+- Build: `Release` (`-O3` via CMake Release defaults), `CMAKE_CXX_STANDARD=20`
+
+**Command**
+```bash
+cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
+cmake --build build-release --target latency_bench -j4
+./build-release/bench/latency_bench
+```
+
+**Results (seed=42, warm-up=5000, measured=50000)**
+
+| Metric | ns |
+|---|---:|
+| p50 | 250.0 |
+| p90 | 542.0 |
+| p99 | 2375.0 |
+| p99.9 | 8792.2 |
+| max | 3491291.0 |
+
 ## Project Structure
 
 ```text
 .
 ├── .github/workflows/
 │   └── ci.yml                        # CI: build/test matrix + ASan/UBSan job
-├── bench/                            # Benchmarks (placeholder)
+├── bench/
+│   ├── CMakeLists.txt                # Benchmark targets
+│   └── latency_bench.cpp             # Per-command latency benchmark
 ├── docs/
 │   └── adr/
 │       ├── 0001-why-integer-prices.md

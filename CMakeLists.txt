@@ -33,7 +33,6 @@ target_compile_options(trading_oms_rms_demo PRIVATE
 
 enable_testing()
 add_subdirectory(tests)
+add_subdirectory(bench)
 
-# Skeleton directories for future stories
-# bench/  - benchmarks
 # docs/adr/ - architecture decision records
