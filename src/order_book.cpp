@@ -295,4 +295,12 @@ std::optional<AccountId> OrderBook::account_of(OrderId id) const {
     return it->second.it->account();
 }
 
+const Order* OrderBook::find(OrderId id) const {
+    const auto it = order_index_.find(id);
+    if (it == order_index_.end()) {
+        return nullptr;
+    }
+    return &(*it->second.it);
+}
+
 } // namespace oms

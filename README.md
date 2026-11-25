@@ -140,6 +140,11 @@ This project is a learning/demo codebase that evolves incrementally through user
 - New orders and replaces for a halted account are rejected with `account halted`.
 - Cancels remain allowed so risk/operators can reduce exposure while an account is halted.
 
+### S5.1 - Matching engine facade
+- `MatchingEngine` provides a single entry point that processes `EngineCommand`s (`Submit`, `Cancel`, `Replace`) in order.
+- A single-threaded sequencer applies validation, risk, then matching; the same input sequence produces deterministic output.
+- ADR: [ADR-004 - Single-Writer Design](docs/adr/0004-single-writer-design.md).
+
 ## Project Structure
 
 ```text
@@ -150,12 +155,15 @@ This project is a learning/demo codebase that evolves incrementally through user
 ├── docs/
 │   └── adr/
 │       ├── 0001-why-integer-prices.md
-│       └── 0002-order-book-data-structure.md
+│       ├── 0002-order-book-data-structure.md
+│       ├── 0003-event-journal-and-replay.md
+│       └── 0004-single-writer-design.md
 ├── include/
 │   └── oms/
 │       ├── event_sink.hpp            # EventSink interface + in-memory sink
 │       ├── events.hpp                # Domain events and Event variant
 │       ├── journal.hpp               # Append-only event journal and replay
+│       ├── matching_engine.hpp       # Single-entry sequencer: validation, risk, matching
 │       ├── oms.hpp                   # OMS facade with idempotent submission
 │       ├── order.hpp                 # Order model with validation
 │       ├── order_book.hpp            # Order book API
@@ -167,6 +175,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 ├── src/
 │   ├── journal.cpp                   # Journal append/replay implementation
 │   ├── main.cpp                      # Demo executable entry point
+│   ├── matching_engine.cpp           # Matching engine facade/sequencer
 │   ├── oms.cpp                       # OMS idempotency facade
 │   ├── order.cpp                     # Order validation/formatting
 │   ├── order_book.cpp                # Add/match/cancel/replace/depth logic
@@ -180,6 +189,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── journal_test.cpp
 │   ├── market_order_test.cpp
 │   ├── matching_test.cpp
+│   ├── matching_engine_test.cpp
 │   ├── order_book_test.cpp
 │   ├── order_state_test.cpp
 │   ├── position_test.cpp
@@ -243,7 +253,8 @@ Current test suites cover:
 - max order size and max notional fat-finger limits,
 - position tracking and per-account/symbol position limits (long/short),
 - per-account token-bucket order rate limiting with deterministic clock injection,
-- account halt/kill switch (new orders/replaces rejected, cancels allowed).
+- account halt/kill switch (new orders/replaces rejected, cancels allowed),
+- matching engine facade sequencing commands with validation, risk, then matching deterministically.
 
 ## Continuous Integration
 
@@ -257,6 +268,7 @@ GitHub Actions CI (`.github/workflows/ci.yml`) runs on every push and pull reque
 - [ADR-001: Why Integer Prices](docs/adr/0001-why-integer-prices.md)
 - [ADR-002: Order Book Data Structure](docs/adr/0002-order-book-data-structure.md)
 - [ADR-003: Event Journal and Replay](docs/adr/0003-event-journal-and-replay.md)
+- [ADR-004: Single-Writer Design](docs/adr/0004-single-writer-design.md)
 
 ## Development Notes
 

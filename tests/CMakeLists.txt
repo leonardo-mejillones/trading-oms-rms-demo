@@ -30,6 +30,7 @@ add_executable(trading_oms_rms_tests
     position_test.cpp
     rate_limit_test.cpp
     account_halt_test.cpp
+    matching_engine_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests

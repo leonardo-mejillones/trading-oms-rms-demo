@@ -68,6 +68,9 @@ public:
     /// Returns the account that owns a resting order, or nullopt if unknown.
     [[nodiscard]] std::optional<AccountId> account_of(OrderId id) const;
 
+    /// Returns a pointer to a resting order, or nullptr if unknown.
+    [[nodiscard]] const Order* find(OrderId id) const;
+
 private:
     using PriceLevel = std::list<Order>;
     using BidLevels = std::map<Price, PriceLevel, std::greater<Price>>;
