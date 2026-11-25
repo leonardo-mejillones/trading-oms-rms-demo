@@ -150,6 +150,10 @@ This project is a learning/demo codebase that evolves incrementally through user
 - `try_push`/`try_pop` are wait-free; memory ordering is documented in the header (acquire/release on head/tail indices).
 - Stress-tested with concurrent producer/consumer tests and a dedicated ThreadSanitizer CI job.
 
+### S6.1 - Order flow generator
+- `OrderFlowGenerator` produces a reproducible, seeded synthetic workload as `EngineCommand`s.
+- Configurable mix includes passive new limit orders, aggressive crossing limit orders, and cancels.
+
 ## Project Structure
 
 ```text
@@ -172,6 +176,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │       ├── oms.hpp                   # OMS facade with idempotent submission
 │       ├── order.hpp                 # Order model with validation
 │       ├── order_book.hpp            # Order book API
+│       ├── order_flow_generator.hpp   # Seeded synthetic workload generator
 │       ├── order_state.hpp           # Order lifecycle state machine
 │       ├── position.hpp              # Position tracking and position limits
 │       ├── risk.hpp                  # Composable pre-trade risk checks
@@ -185,6 +190,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── oms.cpp                       # OMS idempotency facade
 │   ├── order.cpp                     # Order validation/formatting
 │   ├── order_book.cpp                # Add/match/cancel/replace/depth logic
+│   ├── order_flow_generator.cpp      # Synthetic workload generation
 │   ├── order_state.cpp               # Order lifecycle transition table
 │   └── validation.cpp                # Order validation rules
 ├── tests/
@@ -197,6 +203,7 @@ This project is a learning/demo codebase that evolves incrementally through user
 │   ├── matching_test.cpp
 │   ├── matching_engine_test.cpp
 │   ├── order_book_test.cpp
+│   ├── order_flow_generator_test.cpp
 │   ├── order_state_test.cpp
 │   ├── position_test.cpp
 │   ├── rate_limit_test.cpp
@@ -262,7 +269,8 @@ Current test suites cover:
 - per-account token-bucket order rate limiting with deterministic clock injection,
 - account halt/kill switch (new orders/replaces rejected, cancels allowed),
 - matching engine facade sequencing commands with validation, risk, then matching deterministically,
-- bounded SPSC ring buffer with wait-free producer/consumer operations and concurrent stress tests.
+- bounded SPSC ring buffer with wait-free producer/consumer operations and concurrent stress tests,
+- reproducible seeded order-flow generation with passive, aggressive, and cancel commands.
 
 ## Continuous Integration
 
