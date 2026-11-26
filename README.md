@@ -2,9 +2,40 @@
 
 A C++20 demo application showcasing core **Order Management System (OMS)** and **Risk Management System (RMS)** concepts in trading software.
 
-## Purpose
+## Problem
 
-This project is a learning/demo codebase that evolves incrementally through user stories. It focuses on correctness, clear domain modeling, and testability for trading workflows such as order validation, event emission, order book management, matching, and cancellation.
+Trading systems need to process orders correctly, deterministically, and with clear risk controls. Building a realistic OMS/RMS from scratch is complex: order matching, lifecycle management, validation, idempotency, pre-trade risk, and observability all interact.
+
+This repository is an **educational C++20 simulation** that incrementally implements core OMS/RMS concepts with synthetic data and deterministic tests. It is **not a production exchange** or a production-ready trading platform.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Client[Client / Generator] -->|EngineCommand| ME[MatchingEngine<br/>single-threaded sequencer]
+    ME -->|validate| VAL[Validation<br/>instrument specs]
+    ME -->|risk + halt + idempotency| OMS[Oms facade]
+    OMS -->|pre-trade checks| RISK[RiskCheckPipeline<br/>size/notional/rate/position]
+    OMS -->|submit/cancel/replace| OB[OrderBook<br/>price-time FIFO]
+    OB -->|events| SINK[EventSink]
+    OMS -->|events| SINK
+    SINK --> JOURNAL[EventJournal / tests / observers]
+
+    MD[MarketDataSimulator] -->|UDP quotes + seq| UDP[UDP datagrams]
+    UDP --> FH[FeedHandler<br/>seq validation + gap detection]
+    FH -->|try_push Quote| RB[SpscRingBuffer<Quote>]
+    RB -->|consumer| CONS[Downstream consumer]
+```
+
+## Design Decisions
+
+- **Integer tick prices (`Price`)**: avoid floating-point precision errors; all prices are integer ticks. See [ADR-001](docs/adr/0001-why-integer-prices.md).
+- **Order book data structure**: `std::map` price levels + FIFO `std::list` per level + `OrderId` index for O(1) cancel lookup. See [ADR-002](docs/adr/0002-order-book-data-structure.md).
+- **Single-writer sequencer**: `MatchingEngine` processes commands in order on one thread; validation, risk, then matching for deterministic behavior. See [ADR-004](docs/adr/0004-single-writer-design.md).
+- **Event journal/replay**: append-only input journal enables deterministic replay/rebuild. See [ADR-003](docs/adr/0003-event-journal-and-replay.md).
+- **Composable pre-trade risk**: risk checks implement `RiskCheck` and short-circuit in `RiskCheckPipeline`; OMS enforces halt and idempotency before matching.
+- **Deterministic testing**: seeded generators, injectable clocks, and reference-model invariants tests prioritize reproducibility.
+- **Clear limitations**: synthetic data, no real market connectivity, no persistence beyond in-memory structures, no auth/multi-process production hardening.
 
 ## Implemented Features
 
@@ -209,6 +240,10 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 - `FeedHandler` receives datagrams, decodes quotes, validates sequence numbers, detects gaps, and pushes parsed quotes into an `SpscRingBuffer<Quote>`.
 - Tracks stats for invalid datagrams, gap events/missing sequences, duplicates/late messages, pushed, and dropped (ring full).
 
+### S8.3 - Demo scenario CLI
+- `scenario_cli` replays a line-based scenario file through `MatchingEngine` and prints trades/rejections/cancels and final book state.
+- Supports `INSTRUMENT`, `SUBMIT`, `CANCEL`, and `REPLACE` commands; sample scenario provided in `scenarios/sample.scenario`.
+
 ## Project Structure
 
 ```text
@@ -224,6 +259,8 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 │       ├── 0002-order-book-data-structure.md
 │       ├── 0003-event-journal-and-replay.md
 │       └── 0004-single-writer-design.md
+├── scenarios/
+│   └── sample.scenario               # Sample replay scenario
 ├── include/
 │   └── oms/
 │       ├── event_sink.hpp            # EventSink interface + in-memory sink
@@ -253,6 +290,7 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 │   ├── order_book.cpp                # Add/match/cancel/replace/depth logic
 │   ├── order_flow_generator.cpp      # Synthetic workload generation
 │   ├── order_state.cpp               # Order lifecycle transition table
+│   ├── scenario_cli.cpp              # Scenario replay CLI
 │   └── validation.cpp                # Order validation rules
 ├── tests/
 │   ├── cancel_test.cpp
@@ -304,6 +342,12 @@ Run the demo executable:
 ./build/trading_oms_rms_demo
 ```
 
+Run the scenario replay CLI:
+
+```bash
+./build/scenario_cli scenarios/sample.scenario
+```
+
 ## Test
 
 Run all tests with CTest:
@@ -337,6 +381,36 @@ Current test suites cover:
 - market data simulator generating deterministic sequenced quotes and UDP send/receive round-trip,
 - feed handler sequence validation, gap/duplicate detection, and ring-buffer push/drop behavior.
 
+## Benchmark Results
+
+Measured with `bench/latency_bench.cpp` (seeded workload, per `MatchingEngine::process` command). Results are honest local measurements; latency tails/max are OS-noisy.
+
+**Environment**
+- Hardware: Apple M5 Pro (Mac17,9, arm64)
+- OS: Darwin 27.0.0 (macOS)
+- Compiler: Apple clang 21.0.0 (clang-2100.4.1.1), target arm64-apple-darwin27.0.0
+- Build: Release (`CMAKE_CXX_STANDARD=20`)
+
+**Baseline (S6.2, seed=42, warm-up=5000, measured=50000)**
+
+| Metric | ns |
+|---|---:|
+| p50 | 250.0 |
+| p90 | 542.0 |
+| p99 | 2375.0 |
+| p99.9 | 8792.2 |
+| max | 3491291.0 |
+
+**Optimization pass (S6.3, same workload/config, one measured run each; memory/instructions are the clearest signal)**
+
+| Metric | Before | After |
+|---|---:|---:|
+| peak memory footprint bytes | 49709440 | 32293224 |
+| page reclaims | 3252 | 2193 |
+| instructions retired | 283105775 | 241497468 |
+
+See S6.2/S6.3 in [Implemented Features](#implemented-features) for full details and latency-variance notes.
+
 ## Continuous Integration
 
 GitHub Actions CI (`.github/workflows/ci.yml`) runs on every push and pull request:
@@ -350,6 +424,13 @@ GitHub Actions CI (`.github/workflows/ci.yml`) runs on every push and pull reque
 - [ADR-002: Order Book Data Structure](docs/adr/0002-order-book-data-structure.md)
 - [ADR-003: Event Journal and Replay](docs/adr/0003-event-journal-and-replay.md)
 - [ADR-004: Single-Writer Design](docs/adr/0004-single-writer-design.md)
+
+## Limitations
+
+- **Educational simulation:** this project is for learning/demo purposes and uses synthetic data/workloads; it is **not a production exchange**.
+- **No production connectivity:** no FIX/gateway, real market-data feeds, persistence durability guarantees, or exchange/broker integrations.
+- **Simplified model:** single-process, in-memory components; limited instrument/risk/account model; not hardened for adversarial inputs or operational requirements.
+- **Performance numbers are contextual:** benchmark results are honest but machine/OS/compiler dependent and can be noisy, especially latency tails/max.
 
 ## Development Notes
 

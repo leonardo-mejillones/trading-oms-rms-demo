@@ -12,6 +12,20 @@ The OMS/RMS demo needs crash-recovery capability. After a process restart or fai
 
 We need a simple, append-only persistence model suitable for a demo that preserves determinism and supports state reconstruction.
 
+## Alternatives Considered
+
+### Journal domain output events only
+- **Pros:** reuses events already emitted by the system.
+- **Cons:** output events may not capture all inputs needed to deterministically rebuild state; replay semantics can be harder.
+
+### Periodic full state snapshots
+- **Pros:** fast recovery from a recent snapshot.
+- **Cons:** snapshots alone miss changes between snapshots; requires snapshot/version management and still benefits from a log.
+
+### Durable database/WAL from day one
+- **Pros:** real durability and crash recovery guarantees.
+- **Cons:** more operational and implementation complexity than needed for this educational in-memory demo.
+
 ## Decision
 
 Introduce an append-only `EventJournal` that records order-processing inputs as journal entries:

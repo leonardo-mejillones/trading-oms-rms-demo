@@ -16,6 +16,20 @@ Using standard IEEE-754 binary floating-point numbers (`float`, `double`) introd
 3. **Imprecise Comparisons:** Order book priority requires exact equality and strict ordering (e.g., `price1 == price2` or `price1 >= price2`). Floating-point comparison with epsilon thresholds is fragile, slow, and dangerous in matching engines and risk checks.
 4. **Regulatory and Audit Compliance:** Financial regulators require exact accounting of execution prices, trade notionals, and commissions. Floating-point drift violates auditability.
 
+## Alternatives Considered
+
+### IEEE-754 `double`/`float`
+- **Pros:** native language support, convenient for quick prototypes.
+- **Cons:** binary representation and rounding errors make exact price comparison and accounting unsafe.
+
+### Fixed-point / decimal libraries
+- **Pros:** can represent decimal fractions directly.
+- **Cons:** adds dependency or implementation complexity; tick-based integers map naturally to exchange price increments.
+
+### Raw `int64_t` without a strong type
+- **Pros:** simple and efficient.
+- **Cons:** easy to mix prices with quantities/IDs; loses compile-time safety.
+
 ## Decision
 
 We represent all prices using integer ticks (`int64_t`) wrapped in a strongly typed `Price` primitive:

@@ -1,0 +1,22 @@
+# Sample OMS/RMS scenario
+# Format:
+#   INSTRUMENT <symbol> <tick_size> <lot_size>
+#   SUBMIT <id> <account> <SIDE> <price_ticks> <qty> <LIMIT|MARKET> <GTC|IOC> <client_order_id> <symbol>
+#   CANCEL <id>
+#   REPLACE <id> <new_price_ticks> <new_qty>
+
+INSTRUMENT AAPL 1 1
+
+# Seed resting liquidity
+SUBMIT 1 1 SELL 101 10 LIMIT GTC 1001 AAPL
+SUBMIT 2 1 SELL 102 5 LIMIT GTC 1002 AAPL
+SUBMIT 3 2 BUY  99  8 LIMIT GTC 1003 AAPL
+
+# Aggressive buy crosses the book
+SUBMIT 4 3 BUY 101 12 LIMIT GTC 1004 AAPL
+
+# Cancel remaining resting order
+CANCEL 2
+
+# Replace resting bid
+REPLACE 3 100 8

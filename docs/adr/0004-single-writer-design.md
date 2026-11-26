@@ -10,6 +10,20 @@ Accepted
 
 The matching engine must process commands deterministically and preserve order book invariants. Trading systems commonly choose between a single-writer/sequenced design and multi-threaded designs with locks or lock-free structures. This demo needs a clear, testable processing model for command ordering, validation, risk checks, and matching.
 
+## Alternatives Considered
+
+### Coarse-grained locks around the book/engine
+- **Pros:** simpler to add concurrency incrementally.
+- **Cons:** lock contention, deadlock risk, and harder-to-reproduce behavior under load.
+
+### Fine-grained or lock-free multi-threaded matching
+- **Pros:** potential throughput/scaling benefits.
+- **Cons:** significantly higher complexity; difficult to guarantee determinism and invariants in a demo.
+
+### Actor/mailbox model per symbol
+- **Pros:** good scaling path while preserving single-writer semantics per shard.
+- **Cons:** more infrastructure than needed now; can be adopted later as a scaling strategy.
+
 ## Decision
 
 Adopt a **single-writer, single-threaded sequencer** as the matching engine entry point. Commands (`Submit`, `Cancel`, `Replace`) are processed in arrival order by one thread through a single facade (`MatchingEngine`). For each command, the engine applies validation, then risk checks, then matching/book mutation.

@@ -33,6 +33,12 @@ target_compile_options(trading_oms_rms_demo PRIVATE
     $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Werror>
 )
 
+add_executable(scenario_cli src/scenario_cli.cpp)
+target_link_libraries(scenario_cli PRIVATE oms_domain)
+target_compile_options(scenario_cli PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Werror>
+)
+
 enable_testing()
 add_subdirectory(tests)
 add_subdirectory(bench)
