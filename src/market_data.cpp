@@ -185,8 +185,8 @@ bool UdpMarketDataSender::send(const Quote& quote) {
 #else
     const auto sent = ::sendto(fd_, payload.data(), payload.size(), 0, dest, dest_len_);
 #endif
-    // Treat short sends as failure so callers can detect delivery issues.
-    return sent == static_cast<decltype(sent)>(payload.size());
+    // Treat short/error sends as failure so callers can detect delivery issues.
+    return sent >= 0 && static_cast<std::size_t>(sent) == payload.size();
 }
 
 } // namespace oms
