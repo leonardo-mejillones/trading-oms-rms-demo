@@ -200,6 +200,11 @@ cmake --build build-release --target latency_bench -j4
 
 Notes: the memory/instruction reduction is consistent with removing sink reallocations; latency tails/max vary significantly run-to-run on this desktop OS, so they should not be read as a precise improvement claim.
 
+### S7.1 - Market data simulator
+- `MarketDataSimulator` generates reproducible synthetic quotes with monotonic sequence numbers (`Quote`: seq, symbol, bid/ask, bid/ask qty).
+- `encode_quote`/`decode_quote` provide a fixed-size native-byte-order wire format for UDP payloads.
+- `UdpMarketDataSender` sends encoded quotes as UDP datagrams to a configured host/port.
+
 ## Project Structure
 
 ```text
@@ -220,6 +225,7 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 │       ├── event_sink.hpp            # EventSink interface + in-memory sink
 │       ├── events.hpp                # Domain events and Event variant
 │       ├── journal.hpp               # Append-only event journal and replay
+│       ├── market_data.hpp            # Synthetic market data quotes and UDP sender
 │       ├── matching_engine.hpp       # Single-entry sequencer: validation, risk, matching
 │       ├── oms.hpp                   # OMS facade with idempotent submission
 │       ├── order.hpp                 # Order model with validation
@@ -234,6 +240,7 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 ├── src/
 │   ├── journal.cpp                   # Journal append/replay implementation
 │   ├── main.cpp                      # Demo executable entry point
+│   ├── market_data.cpp               # Market data simulator and UDP sender
 │   ├── matching_engine.cpp           # Matching engine facade/sequencer
 │   ├── oms.cpp                       # OMS idempotency facade
 │   ├── order.cpp                     # Order validation/formatting
@@ -247,6 +254,7 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 │   ├── idempotency_test.cpp
 │   ├── invariants_test.cpp
 │   ├── journal_test.cpp
+│   ├── market_data_test.cpp
 │   ├── market_order_test.cpp
 │   ├── matching_test.cpp
 │   ├── matching_engine_test.cpp
@@ -318,7 +326,8 @@ Current test suites cover:
 - account halt/kill switch (new orders/replaces rejected, cancels allowed),
 - matching engine facade sequencing commands with validation, risk, then matching deterministically,
 - bounded SPSC ring buffer with wait-free producer/consumer operations and concurrent stress tests,
-- reproducible seeded order-flow generation with passive, aggressive, and cancel commands.
+- reproducible seeded order-flow generation with passive, aggressive, and cancel commands,
+- market data simulator generating deterministic sequenced quotes and UDP send/receive round-trip.
 
 ## Continuous Integration
 

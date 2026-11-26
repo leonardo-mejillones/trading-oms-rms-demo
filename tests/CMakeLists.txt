@@ -34,6 +34,7 @@ add_executable(trading_oms_rms_tests
     matching_engine_test.cpp
     spsc_ring_buffer_test.cpp
     order_flow_generator_test.cpp
+    market_data_test.cpp
 )
 
 target_link_libraries(trading_oms_rms_tests

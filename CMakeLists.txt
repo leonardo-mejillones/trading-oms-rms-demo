@@ -19,6 +19,7 @@ add_library(oms_domain
     src/journal.cpp
     src/matching_engine.cpp
     src/order_flow_generator.cpp
+    src/market_data.cpp
 )
 target_include_directories(oms_domain PUBLIC include)
 target_compile_options(oms_domain PRIVATE
