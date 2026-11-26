@@ -205,6 +205,10 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 - `encode_quote`/`decode_quote` provide a fixed-size native-byte-order wire format for UDP payloads.
 - `UdpMarketDataSender` sends encoded quotes as UDP datagrams to a configured host/port.
 
+### S7.2 - Feed handler
+- `FeedHandler` receives datagrams, decodes quotes, validates sequence numbers, detects gaps, and pushes parsed quotes into an `SpscRingBuffer<Quote>`.
+- Tracks stats for invalid datagrams, gap events/missing sequences, duplicates/late messages, pushed, and dropped (ring full).
+
 ## Project Structure
 
 ```text
@@ -224,6 +228,7 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 │   └── oms/
 │       ├── event_sink.hpp            # EventSink interface + in-memory sink
 │       ├── events.hpp                # Domain events and Event variant
+│       ├── feed_handler.hpp          # UDP/datagram feed handler with seq gap detection
 │       ├── journal.hpp               # Append-only event journal and replay
 │       ├── market_data.hpp            # Synthetic market data quotes and UDP sender
 │       ├── matching_engine.hpp       # Single-entry sequencer: validation, risk, matching
@@ -238,6 +243,7 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 │       ├── types.hpp                 # Strong domain primitives/enums
 │       └── validation.hpp            # Order validation and reject reasons
 ├── src/
+│   ├── feed_handler.cpp             # Feed handler sequence validation and gap detection
 │   ├── journal.cpp                   # Journal append/replay implementation
 │   ├── main.cpp                      # Demo executable entry point
 │   ├── market_data.cpp               # Market data simulator and UDP sender
@@ -251,6 +257,7 @@ Notes: the memory/instruction reduction is consistent with removing sink realloc
 ├── tests/
 │   ├── cancel_test.cpp
 │   ├── events_test.cpp
+│   ├── feed_handler_test.cpp
 │   ├── idempotency_test.cpp
 │   ├── invariants_test.cpp
 │   ├── journal_test.cpp
@@ -327,7 +334,8 @@ Current test suites cover:
 - matching engine facade sequencing commands with validation, risk, then matching deterministically,
 - bounded SPSC ring buffer with wait-free producer/consumer operations and concurrent stress tests,
 - reproducible seeded order-flow generation with passive, aggressive, and cancel commands,
-- market data simulator generating deterministic sequenced quotes and UDP send/receive round-trip.
+- market data simulator generating deterministic sequenced quotes and UDP send/receive round-trip,
+- feed handler sequence validation, gap/duplicate detection, and ring-buffer push/drop behavior.
 
 ## Continuous Integration
 
